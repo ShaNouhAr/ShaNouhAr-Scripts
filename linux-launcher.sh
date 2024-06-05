@@ -60,6 +60,7 @@ execute_script() {
 
 # Boucle principale de navigation
 while [ "$EXIT" = false ]; do
+    clear
     echo -e "${COLOR_RED}=============================================="
     echo -e "                 ShaNouhAr-Scripts             "
     echo -e "==============================================${COLOR_RESET}"
@@ -78,7 +79,7 @@ while [ "$EXIT" = false ]; do
                 PARENT_URLS=("${PARENT_URLS[@]:0:${#PARENT_URLS[@]}-1}")
             else
                 echo -e "${COLOR_RED}Vous êtes déjà à la racine.${COLOR_RESET}"
-                sleep 2
+                read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
             fi
         else
             SELECTED_ITEM=$(echo "$CONTENT" | jq -r ".[$((INPUT-1))]")
@@ -93,13 +94,7 @@ while [ "$EXIT" = false ]; do
             elif [ "$SELECTED_TYPE" == "file" ]; then
                 RAW_URL=$(echo "$SELECTED_URL" | sed 's|https://api.github.com/repos/|https://raw.githubusercontent.com/|; s|/contents/|/master/|')
                 execute_script "$RAW_URL" "$SELECTED_NAME"
+                read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
             else
                 echo -e "${COLOR_RED}Veuillez sélectionner un numéro valide.${COLOR_RESET}"
-                sleep 2
-            fi
-        fi
-    else
-        echo -e "${COLOR_RED}Veuillez entrer un numéro valide.${COLOR_RESET}"
-        sleep 2
-    fi
-done
+                read -n 

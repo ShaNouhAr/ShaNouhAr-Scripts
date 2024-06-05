@@ -25,7 +25,7 @@ show_directory_content() {
     ITEMS=$(get_github_content "$1")
     COUNTER=1
     echo -e "${COLOR_YELLOW}0. .. (Revenir en arrière)${COLOR_RESET}"
-    echo "$ITEMS" | jq -r '.[] | "\(.type) \(.name) \(.path) \(.url)"' | while read -r TYPE NAME PATH URL; do
+    echo "$ITEMS" | jq -r '.[] | "\(.type) \(.name)"' | while read -r TYPE NAME; do
         if [ "$TYPE" == "dir" ]; then
             echo -e "${COLOR_CYAN}$COUNTER. $NAME (Dossier)${COLOR_RESET}"
         else
@@ -65,6 +65,11 @@ while [ "$EXIT" = false ]; do
     echo -e "==============================================${COLOR_RESET}"
 
     CONTENT=$(get_github_content "$CURRENT_URL")
+    if [[ "$CONTENT" == *"API rate limit exceeded"* ]]; then
+        echo -e "${COLOR_RED}API rate limit exceeded. Please try again later.${COLOR_RESET}"
+        exit 1
+    fi
+
     show_directory_content "$CURRENT_URL"
 
     read -p "Entrez un numéro pour naviguer ou exécuter un script, ou 'exit' pour quitter: " INPUT
@@ -90,7 +95,7 @@ while [ "$EXIT" = false ]; do
             if [ "$SELECTED_TYPE" == "dir" ]; then
                 PARENT_URLS+=("$CURRENT_URL")
                 CURRENT_URL="$BASE_API_URL/$SELECTED_PATH"
-            elif [ "$SELECTED_TYPE" == "file" ]; alors
+            elif [ "$SELECTED_TYPE" == "file" ]; then
                 RAW_URL=$(echo "$SELECTED_URL" | sed 's|https://api.github.com/repos/|https://raw.githubusercontent.com/|; s|/contents/|/master/|')
                 execute_script "$RAW_URL" "$SELECTED_NAME"
                 read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
@@ -100,7 +105,4 @@ while [ "$EXIT" = false ]; do
             fi
         fi
     else
-        echo -e "${COLOR_RED}Veuillez entrer un numéro valide.${COLOR_RESET}"
-        read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
-    fi
-done
+        echo

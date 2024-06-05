@@ -1,83 +1,118 @@
 #!/bin/bash
 
-# Définir les variables
-REPO_OWNER="ShaNouhAr"
-REPO_NAME="ShaNouhAr-Scripts"
-BASE_API_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/contents"
-CURRENT_URL="$BASE_API_URL/linux"
-PARENT_URLS=()
-EXIT=false
+# Script Bash pour lister et naviguer dans un repository GitHub public
+# Titre : ShaNouhAr-Scripts
 
-# Couleurs
-COLOR_RESET="\e[0m"
-COLOR_GREEN="\e[32m"
-COLOR_YELLOW="\e[33m"
-COLOR_CYAN="\e[36m"
-COLOR_RED="\e[31m"
+# URL du repository GitHub
+repoOwner="ShaNouhAr"
+repoName="ShaNouhAr-Scripts"
+baseApiUrl="https://api.github.com/repos/$repoOwner/$repoName/contents/linux"
 
 # Fonction pour obtenir le contenu d'un dossier depuis l'API GitHub
-get_github_content() {
-    curl -s -H "User-Agent: shell-script" "$1"
+function get_github_content {
+    url=$1
+    curl -s -H "User-Agent: Bash" "$url"
 }
 
-# Fonction pour afficher la liste des scripts disponibles
-show_directory_content() {
-    ITEMS=$(get_github_content "$1")
-    COUNTER=1
-    echo -e "${COLOR_YELLOW}0. .. (Revenir en arrière)${COLOR_RESET}"
-    echo "$ITEMS" | jq -r '.[] | "\(.type) \(.name)"' | while read -r TYPE NAME; do
-        if [ "$TYPE" == "dir" ]; then
-            echo -e "${COLOR_CYAN}$COUNTER. $NAME (Dossier)${COLOR_RESET}"
-        else
-            echo -e "${COLOR_GREEN}$COUNTER. $NAME (Fichier)${COLOR_RESET}"
-        fi
-        COUNTER=$((COUNTER + 1))
-    done
+# Fonction pour afficher le contenu d'un dossier
+function show_directory_content {
+    url=$1
+    items=$(get_github_content "$url")
+    echo "$items" | jq -r '.[] | "\(.type) \(.name) \(.path) \(.url)"' | nl -v 1
 }
 
-# Fonction pour exécuter un script
-execute_script() {
-    SCRIPT_URL="$1"
-    FILE_NAME=$(basename "$2")
-    TEMP_SCRIPT_PATH="/tmp/$FILE_NAME"
-    curl -s -L -o "$TEMP_SCRIPT_PATH" "$SCRIPT_URL"
-    chmod +x "$TEMP_SCRIPT_PATH"
-    bash "$TEMP_SCRIPT_PATH"
+# Fonction pour exécuter un script localement
+function execute_script {
+    script_url=$1
+    file_path=$2
+    script_content=$(curl -s -H "User-Agent: Bash" "$script_url")
+    temp_script_path="/tmp/$file_path"
+    echo "$script_content" > "$temp_script_path"
+    
+    extension="${temp_script_path##*.}"
+    
+    case $extension in
+        ps1)
+            sudo pwsh "$temp_script_path"
+            ;;
+        py)
+            python3 "$temp_script_path"
+            ;;
+        reg)
+            echo "Regedit not supported on Linux"
+            ;;
+        bat)
+            echo "Batch files not supported on Linux"
+            ;;
+        *)
+            echo "Type de fichier non supporté: $extension"
+            ;;
+    esac
 }
 
-# Boucle principale de navigation
-while [ "$EXIT" = false ]; do
+# Fonction pour afficher une interface utilisateur agréable
+function show_interface {
+    content=$1
     clear
-    echo -e "${COLOR_RED}=============================================="
+    echo -e "\e[36m=============================================="
     echo -e "                 ShaNouhAr-Scripts             "
-    echo -e "==============================================${COLOR_RESET}"
-    CONTENT=$(get_github_content "$CURRENT_URL")
-    show_directory_content "$CURRENT_URL"
-    read -p "Entrez le numéro du script à exécuter ou 'exit' pour quitter: " INPUT
-    if [ "$INPUT" == "exit" ]; then
-        EXIT=true
-    elif [ "$INPUT" -eq 0 ]; then
-        if [ ${#PARENT_URLS[@]} -gt 0 ]; then
-            CURRENT_URL=${PARENT_URLS[-1]}
-            PARENT_URLS=("${PARENT_URLS[@]:0:${#PARENT_URLS[@]}-1}")
+    echo -e "==============================================\e[0m"
+    
+    echo -e "\e[37m0. .. (Revenir en arrière)\e[0m"
+    echo -e "$content" | while read -r line; do
+        type=$(echo "$line" | awk '{print $2}')
+        if [ "$type" = "dir" ]; then
+            echo -e "\e[32m$line\e[0m"
         else
-            echo -e "${COLOR_RED}Vous êtes déjà à la racine.${COLOR_RESET}"
+            echo -e "\e[33m$line\e[0m"
+        fi
+    done
+
+    echo -e "\n\e[33mEntrez un numéro pour naviguer ou exécuter un script, ou 'exit' pour quitter:\e[0m"
+}
+
+# Initialisation de la navigation
+current_url=$baseApiUrl
+parent_urls=()
+exit=false
+
+while [ "$exit" = false ]; do
+    content=$(show_directory_content "$current_url")
+    show_interface "$content"
+    
+    read -p "> " input
+    
+    if [ "$input" = "exit" ]; then
+        exit=true
+    elif [ "$input" = "0" ]; then
+        if [ ${#parent_urls[@]} -gt 0 ]; then
+            current_url=${parent_urls[-1]}
+            parent_urls=("${parent_urls[@]::${#parent_urls[@]}-1}")
+        else
+            echo -e "\e[31mVous êtes déjà à la racine.\e[0m"
+            sleep 2
+        fi
+    elif [[ "$input" =~ ^[0-9]+$ ]]; then
+        number=$(echo "$input" | awk '{print $1}')
+        item=$(echo "$content" | awk 'NR=='$number'')
+        if [ -n "$item" ]; then
+            item_url=$(echo "$item" | awk '{print $5}')
+            item_type=$(echo "$item" | awk '{print $2}')
+            item_name=$(echo "$item" | awk '{print $3}')
+            if [ "$item_type" = "dir" ]; then
+                parent_urls+=("$current_url")
+                current_url=$item_url
+            elif [ "$item_type" = "file" ]; then
+                file_url=${item_url/https:\/\/api.github.com\/repos\//https:\/\/raw.githubusercontent.com\/}
+                file_url=${file_url/\/contents\//\/master\/}
+                execute_script "$file_url" "$item_name"
+            fi
+        else
+            echo -e "\e[31mVeuillez sélectionner un numéro valide.\e[0m"
             sleep 2
         fi
     else
-        SELECTED_ITEM=$(echo "$CONTENT" | jq -r ".[$((INPUT-1))]")
-        SELECTED_TYPE=$(echo "$SELECTED_ITEM" | jq -r '.type')
-        SELECTED_NAME=$(echo "$SELECTED_ITEM" | jq -r '.name')
-        SELECTED_URL=$(echo "$SELECTED_ITEM" | jq -r '.url')
-        if [ "$SELECTED_TYPE" == "dir" ]; then
-            PARENT_URLS+=("$CURRENT_URL")
-            CURRENT_URL="$SELECTED_URL"
-        elif [ "$SELECTED_TYPE" == "file" ]; then
-            RAW_URL=$(echo "$SELECTED_URL" | sed 's|https://api.github.com/repos/|https://raw.githubusercontent.com/|; s|/contents/|/master/|')
-            execute_script "$RAW_URL" "$SELECTED_NAME"
-        else
-            echo -e "${COLOR_RED}Veuillez sélectionner un numéro valide.${COLOR_RESET}"
-            sleep 2
-        fi
+        echo -e "\e[31mCommande invalide. Essayez à nouveau.\e[0m"
+        sleep 2
     fi
 done

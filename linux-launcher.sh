@@ -96,9 +96,9 @@ while [ "$exit" = false ]; do
         number=$(echo "$input" | awk '{print $1}')
         item=$(echo "$content" | awk 'NR=='$number'')
         if [ -n "$item" ]; then
-            item_url=$(echo "$item" | awk '{print $5}')
-            item_type=$(echo "$item" | awk '{print $2}')
-            item_name=$(echo "$item" | awk '{print $3}')
+            item_url=$(echo "$item" | awk '{print $4}')
+            item_type=$(echo "$item" | awk '{print $1}')
+            item_name=$(echo "$item" | awk '{print $2}')
             if [ "$item_type" = "dir" ]; then
                 parent_urls+=("$current_url")
                 current_url=$item_url

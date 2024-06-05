@@ -79,11 +79,11 @@ while [ "$EXIT" = false ]; do
 
     read -p "Entrez un numéro pour naviguer ou exécuter un script, ou 'exit' pour quitter: " INPUT
 
-    if [ "$INPUT" == "exit" ]; alors
+    if [ "$INPUT" == "exit" ]; then
         EXIT=true
-    elif [[ -n "$INPUT" && "$INPUT" =~ ^[0-9]+$ ]]; alors
-        if [ "$INPUT" -eq 0 ]; alors
-            if [ ${#PARENT_URLS[@]} -gt 0 ]; alors
+    elif [[ -n "$INPUT" && "$INPUT" =~ ^[0-9]+$ ]]; then
+        if [ "$INPUT" -eq 0 ]; then
+            if [ ${#PARENT_URLS[@]} -gt 0 ]; then
                 CURRENT_URL=${PARENT_URLS[-1]}
                 PARENT_URLS=("${PARENT_URLS[@]:0:${#PARENT_URLS[@]}-1}")
             else
@@ -97,10 +97,10 @@ while [ "$EXIT" = false ]; do
             SELECTED_PATH=$(echo "$SELECTED_ITEM" | jq -r '.path')
             SELECTED_URL=$(echo "$SELECTED_ITEM" | jq -r '.url')
 
-            if [ "$SELECTED_TYPE" == "dir" ]; alors
+            if [ "$SELECTED_TYPE" == "dir" ]; then
                 PARENT_URLS+=("$CURRENT_URL")
                 CURRENT_URL="$BASE_API_URL/$SELECTED_PATH"
-            elif [ "$SELECTED_TYPE" == "file" ]; alors
+            elif [ "$SELECTED_TYPE" == "file" ]; then
                 RAW_URL=$(echo "$SELECTED_URL" | sed 's|https://api.github.com/repos/|https://raw.githubusercontent.com/|; s|/contents/|/master/|')
                 execute_script "$RAW_URL" "$SELECTED_NAME"
                 read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."

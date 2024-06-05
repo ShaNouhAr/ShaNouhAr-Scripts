@@ -23,14 +23,9 @@ get_github_content() {
 # Fonction pour afficher le contenu d'un dossier
 show_directory_content() {
     ITEMS=$(get_github_content "$1")
-    if ! echo "$ITEMS" | jq empty; then
-        echo -e "${COLOR_RED}Erreur: La réponse de l'API GitHub n'est pas un JSON valide.${COLOR_RESET}"
-        exit 1
-    fi
-    
     COUNTER=1
     echo -e "${COLOR_YELLOW}0. .. (Revenir en arrière)${COLOR_RESET}"
-    echo "$ITEMS" | jq -r '.[] | "\(.type) \(.name)"' | while read -r TYPE NAME; do
+    echo "$ITEMS" | jq -r '.[] | "\(.type) \(.name) \(.path) \(.url)"' | while read -r TYPE NAME PATH URL; do
         if [ "$TYPE" == "dir" ]; then
             echo -e "${COLOR_CYAN}$COUNTER. $NAME (Dossier)${COLOR_RESET}"
         else
@@ -65,52 +60,42 @@ execute_script() {
 
 # Boucle principale de navigation
 while [ "$EXIT" = false ]; do
+    clear
     echo -e "${COLOR_RED}=============================================="
     echo -e "                 ShaNouhAr-Scripts             "
     echo -e "==============================================${COLOR_RESET}"
 
     CONTENT=$(get_github_content "$CURRENT_URL")
-    if [[ "$CONTENT" == *"API rate limit exceeded"* ]]; then
-        echo -e "${COLOR_RED}API rate limit exceeded. Please try again later.${COLOR_RESET}"
-        exit 1
-    fi
-
     show_directory_content "$CURRENT_URL"
 
     read -p "Entrez un numéro pour naviguer ou exécuter un script, ou 'exit' pour quitter: " INPUT
 
     if [ "$INPUT" == "exit" ]; then
         EXIT=true
-    elif [[ -n "$INPUT" && "$INPUT" =~ ^[0-9]+$ ]]; then
-        if [ "$INPUT" -eq 0 ]; then
-            if [ ${#PARENT_URLS[@]} -gt 0 ]; then
-                CURRENT_URL=${PARENT_URLS[-1]}
-                PARENT_URLS=("${PARENT_URLS[@]:0:${#PARENT_URLS[@]}-1}")
-            else
-                echo -e "${COLOR_RED}Vous êtes déjà à la racine.${COLOR_RESET}"
-                read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
-            fi
+    elif [ "$INPUT" -eq 0 ]; then
+        if [ ${#PARENT_URLS[@]} -gt 0 ]; then
+            CURRENT_URL=${PARENT_URLS[-1]}
+            PARENT_URLS=("${PARENT_URLS[@]:0:${#PARENT_URLS[@]}-1}")
         else
-            SELECTED_ITEM=$(echo "$CONTENT" | jq -r ".[$((INPUT-1))]")
-            SELECTED_TYPE=$(echo "$SELECTED_ITEM" | jq -r '.type')
-            SELECTED_NAME=$(echo "$SELECTED_ITEM" | jq -r '.name')
-            SELECTED_PATH=$(echo "$SELECTED_ITEM" | jq -r '.path')
-            SELECTED_URL=$(echo "$SELECTED_ITEM" | jq -r '.url')
-
-            if [ "$SELECTED_TYPE" == "dir" ]; then
-                PARENT_URLS+=("$CURRENT_URL")
-                CURRENT_URL="$BASE_API_URL/$SELECTED_PATH"
-            elif [ "$SELECTED_TYPE" == "file" ]; then
-                RAW_URL=$(echo "$SELECTED_URL" | sed 's|https://api.github.com/repos/|https://raw.githubusercontent.com/|; s|/contents/|/master/|')
-                execute_script "$RAW_URL" "$SELECTED_NAME"
-                read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
-            else
-                echo -e "${COLOR_RED}Veuillez sélectionner un numéro valide.${COLOR_RESET}"
-                read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
-            fi
+            echo -e "${COLOR_RED}Vous êtes déjà à la racine.${COLOR_RESET}"
+            sleep 2
         fi
     else
-        echo -e "${COLOR_RED}Veuillez entrer un numéro valide.${COLOR_RESET}"
-        read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
+        SELECTED_ITEM=$(echo "$CONTENT" | jq -r ".[$((INPUT-1))]")
+        SELECTED_TYPE=$(echo "$SELECTED_ITEM" | jq -r '.type')
+        SELECTED_NAME=$(echo "$SELECTED_ITEM" | jq -r '.name')
+        SELECTED_PATH=$(echo "$SELECTED_ITEM" | jq -r '.path')
+        SELECTED_URL=$(echo "$SELECTED_ITEM" | jq -r '.url')
+
+        if [ "$SELECTED_TYPE" == "dir" ]; then
+            PARENT_URLS+=("$CURRENT_URL")
+            CURRENT_URL="$SELECTED_URL"
+        elif [ "$SELECTED_TYPE" == "file" ]; then
+            RAW_URL=$(echo "$SELECTED_URL" | sed 's|https://api.github.com/repos/|https://raw.githubusercontent.com/|; s|/contents/|/master/|')
+            execute_script "$RAW_URL" "$SELECTED_NAME"
+        else
+            echo -e "${COLOR_RED}Veuillez sélectionner un numéro valide.${COLOR_RESET}"
+            sleep 2
+        fi
     fi
 done

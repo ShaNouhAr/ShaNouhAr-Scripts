@@ -60,7 +60,6 @@ execute_script() {
 
 # Boucle principale de navigation
 while [ "$EXIT" = false ]; do
-    clear
     echo -e "${COLOR_RED}=============================================="
     echo -e "                 ShaNouhAr-Scripts             "
     echo -e "==============================================${COLOR_RESET}"

@@ -97,4 +97,11 @@ while [ "$EXIT" = false ]; do
                 read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
             else
                 echo -e "${COLOR_RED}Veuillez sélectionner un numéro valide.${COLOR_RESET}"
-                read -n 
+                read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
+            fi
+        fi
+    else
+        echo -e "${COLOR_RED}Veuillez entrer un numéro valide.${COLOR_RESET}"
+        read -n 1 -s -r -p "Appuyez sur une touche pour continuer..."
+    fi
+done

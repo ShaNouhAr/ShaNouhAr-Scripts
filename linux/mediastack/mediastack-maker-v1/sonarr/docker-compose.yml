@@ -1,0 +1,17 @@
+---
+version: "2.1"
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:develop
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - ./config:/config
+      - /mnt/ftpseedbox:/ftpseedbox
+      - /mnt/sdb1:/sdb1
+    ports:
+      - 8989:8989
+    restart: unless-stopped

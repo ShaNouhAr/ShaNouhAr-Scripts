@@ -1,0 +1,7 @@
+Launch update_ultracc.py to began
+
+Remove key.key and config.enc for reseting password
+
+The script store 7 logs file into the logs directory
+
+For removing or adding services add a ligne into services.conf

@@ -1,0 +1,17 @@
+---
+version: "2.1"
+services:
+  sonarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - ./config:/config
+      - /mnt/ftpseedbox:/ftpseedbox
+      - /mnt/sdb1:/sdb1
+    ports:
+      - 7878:7878
+    restart: unless-stopped

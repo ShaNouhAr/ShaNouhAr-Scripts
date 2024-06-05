@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  filebrowser:
+    image: hurlenko/filebrowser
+    user: "${UID}:${GID}"
+    ports:
+      - 8081:8080
+    volumes:
+      - /mnt/sdb1/DATA:/data
+      - ./config:/config
+    restart: always

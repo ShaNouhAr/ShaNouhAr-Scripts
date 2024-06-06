@@ -59,7 +59,10 @@ while [ "$exit" = false ]; do
     content=$(show_directory_content $current_url)
     show_interface "$content"
 
-    read -r input
+    if ! read -r input; then
+        echo "Erreur de lecture de l'entrée"
+        exit 1
+    fi
     input=$(echo "$input" | tr -d '\r')
 
     if [[ $input == "exit" ]]; then

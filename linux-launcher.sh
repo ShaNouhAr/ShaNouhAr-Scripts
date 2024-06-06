@@ -60,6 +60,7 @@ while [ "$exit" = false ]; do
     show_interface "$content"
 
     read -r input
+    input=$(echo "$input" | tr -d '\r')
 
     if [[ $input == "exit" ]]; then
         exit=true

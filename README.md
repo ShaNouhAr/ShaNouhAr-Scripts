@@ -9,7 +9,7 @@ Ce dépôt contient un ensemble de scripts utiles pour diverses tâches.
 Pour exécuter les scripts sous Windows, vous pouvez utiliser la commande `irm` (Invoke-RestMethod) dans PowerShell. Voici un exemple :
 
 ```
-irm scripts.shanouhar.duckdns.org/win.ps1 | iex
+irm scripts.shanouhar.fr/win.ps1 | iex
 ```
 
 ### Sous Linux
@@ -17,5 +17,5 @@ irm scripts.shanouhar.duckdns.org/win.ps1 | iex
 Pour exécuter les scripts sous Linux, vous pouvez utiliser la commande `curl` suivie de `bash`. Voici un exemple :
 
 ```
-curl -sSL https://scripts.shanouhar.duckdns.org/linux.sh | bash
+curl -sSL https://scripts.shanouhar.fr/linux.sh | bash
 ```
